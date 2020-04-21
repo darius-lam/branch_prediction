@@ -21,9 +21,11 @@ def push(queue, value):
 	queue.append(value)
 	queue.popleft()
 
+#Branch taken
 def t():
 	push(global_branch_history,1)
 
+#Branch not taken
 def nt():
 	push(global_branch_history,0)
 
@@ -35,12 +37,24 @@ class Perceptron(nn.Module):
 
     def forward(self, x):
         x = self.fc1(x)
-        #x = F.softmax(x)
         return x
+
+
+class ClassicalPerceptron(nn.Module):
+
+    def __init__(self,n):
+        super(ClassicalPerceptron, self).__init__()
+        self.fc1 = nn.Linear(n,1)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        return x
+
 
 def perceptron_decorator(net, optimizer, criterion):
 
 	def wrap(func):
+
 		def wrapper(*args, **kwargs):
 			#print([i.data for i in net.parameters()])
 
@@ -65,13 +79,38 @@ def perceptron_decorator(net, optimizer, criterion):
 			else:
 				nt()
 
-		return wrapper
+		def classical_wrapper(*args, **kwargs):
+			#print([i.data for i in net.parameters()])
+
+			optimizer.zero_grad()
+
+			value = func(*args, **kwargs)
+			pred = net(torch.tensor(global_branch_history,dtype=torch.float))
+
+			#print((pred>0).int().item(), value)
+			#Calculate binary cross entropy for this example
+			loss = torch.abs(pred - value)
+			global_losses.append(loss.item())
+			global_preds.append((pred.detach().numpy(), value))
+
+			#Backpropagate
+			loss.backward()
+			optimizer.step()
+
+			#Add the next value to global history
+			if value == 1:
+				t()
+			else:
+				nt()
+
+
+		return classical_wrapper
 
 	return wrap
 
 #Set up the perceptron
-net = Perceptron(n)
-optimizer = optim.Adam(net.parameters(),lr=1e-3)
+net = ClassicalPerceptron(n)
+optimizer = optim.SGD(net.parameters(),lr=1e-3)
 loss = nn.CrossEntropyLoss()
 
 def f1():
@@ -88,10 +127,11 @@ def f1():
 
 @perceptron_decorator(net, optimizer, loss)
 def f2(x,y,i):
+
 	#populate global history register
 	for j in range(n):
 		if x[i][j]:
-			t()
+			t()  ##We have to call t() or nt() for EVERY conditional 
 		else:
 			nt()
 
@@ -107,6 +147,9 @@ number_of_iterations = 500
 x = []
 y = []
 for i in range(n):
+	#Function where [1,0,0], [0,1,0], [0,0,1] returns 1 (for n=3)
+	#and all others returns 0
+
 	x.append([0] * (i) + [1] + [0] * (n-i))
 	y.append(1)
 	x.append([1] * (i) + [0] + [1] * (n-i))
@@ -136,7 +179,11 @@ def moving_average(a, n=3) :
     return ret[n - 1:] / n
 
 #print([(np.argmax(i[0]), i[1]) for i in global_preds])
-accuracy = np.sum([np.argmax(i[0]) == i[1] for i in global_preds])/len(global_preds)
-print("Accuracy: %f" % accuracy)
+#Accuracy for perceptron (two class)
+#accuracy = np.sum([np.argmax(i[0]) == i[1] for i in global_preds])/len(global_preds)
+#Accuracy for classical percepteron
+
+accuracies = [(i[0] > 0) == i[1] for i in global_preds]
+plt.plot(moving_average(accuracies, n=100))
 plt.plot(moving_average(global_losses,n=50))
 plt.show()
