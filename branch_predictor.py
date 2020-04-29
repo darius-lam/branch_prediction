@@ -15,6 +15,7 @@ class BranchPredictor():
         self.global_history = np.zeros((n,))
         self.total = collections.defaultdict(int)
         self.correct = collections.defaultdict(int)
+        self.moving_accuracy = collections.defaultdict(float)
         self.perceptrons = collections.defaultdict(lambda : BpPerceptron(n))
 
     def __call__(self, condition, tag=None):
@@ -28,9 +29,10 @@ class BranchPredictor():
             self.total[tag] += 1
             p = self.perceptrons[tag].predict_and_update(self.global_history,
                                                          int(condition))
-
+            self.moving_accuracy[tag] *= 0.9
             if (condition == p):
                 self.correct[tag] += 1
+                self.moving_accuracy[tag] += 0.1
 
         self.update_history(condition)
 
@@ -51,13 +53,19 @@ class BranchPredictor():
             acc = self.correct[key] / self.total[key]
             print(f"Branch: {key} Accuracy {acc}")
 
+    def get_accuracies(self):
+        acc = {}
+        for key in self.perceptrons:
+            acc[key] = self.correct[key] / self.total[key]
+        return acc, self.moving_accuracy
+
 class BpPerceptron():
     """
     Wrapper for perceptron. Essentially just has logic for training
     """
     def __init__(self, n):
         self.net = ClassicalPerceptron(n)
-        self.optimizer = optim.SGD(self.net.parameters(), lr=1e-3)
+        self.optimizer = optim.SGD(self.net.parameters(), lr=1e-1)
 
     def predict(self, X):
         pred = self.net(torch.tensor(X, dtype=torch.float))
