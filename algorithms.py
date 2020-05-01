@@ -15,3 +15,26 @@ def bubble_sort(input, bp):
                 input[i] = temp
                 swapped = True
             i += 1
+
+
+def select(input, low, high, batch_size, bp):
+    result = []
+    result_length = 0
+    num_batches = len(input) // batch_size
+
+    i = 0
+    while bp(i < num_batches):
+        if bp(result_length + batch_size > len(result), "expand"):
+            result.extend([0] * batch_size)
+
+        j = 0
+        while bp(j < batch_size):
+            idx = i * batch_size + j
+            if bp(input[idx] >= low and input[idx] < high, "qualify"):
+                result[result_length] = input[idx]
+                result_length += 1
+            j += 1
+
+        i += 1
+
+    return result, result_length
