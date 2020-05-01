@@ -16,6 +16,8 @@ class BranchPredictor():
         self.total = collections.defaultdict(int)
         self.correct = collections.defaultdict(int)
         self.moving_accuracy = collections.defaultdict(float)
+        self.taken_history = collections.defaultdict(list)
+        self.prediction_history = collections.defaultdict(list)
         self.perceptrons = collections.defaultdict(lambda : BpPerceptron(n))
 
     def __call__(self, condition, tag=None):
@@ -30,6 +32,10 @@ class BranchPredictor():
             p = self.perceptrons[tag].predict_and_update(self.global_history,
                                                          int(condition))
             self.moving_accuracy[tag] *= 0.9
+
+            self.taken_history[tag].append(1 if condition else 0)
+            self.prediction_history[tag].append(1 if p else 0)
+
             if (condition == p):
                 self.correct[tag] += 1
                 self.moving_accuracy[tag] += 0.1

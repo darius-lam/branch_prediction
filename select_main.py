@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 from algorithms import select
 from branch_predictor import BranchPredictor
+import plotter
 
 
 history_length = 128
@@ -18,3 +19,5 @@ for _ in range(200):
     result, result_length = select(data, 0, 100, 16, bp)
 
 bp.print_accuracies()
+
+plotter.generate_plot(bp, "expand")
