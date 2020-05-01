@@ -23,12 +23,12 @@ def select(input, low, high, batch_size, bp):
     num_batches = len(input) // batch_size
 
     i = 0
-    while bp(i < num_batches):
+    while bp(i < num_batches, "outer"):
         if bp(result_length + batch_size > len(result), "expand"):
             result.extend([0] * batch_size)
 
         j = 0
-        while bp(j < batch_size):
+        while bp(j < batch_size, "inner"):
             idx = i * batch_size + j
             if bp(input[idx] >= low and input[idx] < high, "qualify"):
                 result[result_length] = input[idx]

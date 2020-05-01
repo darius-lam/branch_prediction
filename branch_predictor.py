@@ -51,7 +51,8 @@ class BranchPredictor():
     def print_accuracies(self):
         for key in self.perceptrons:
             acc = self.correct[key] / self.total[key]
-            print(f"Branch: {key} Accuracy {acc}")
+            mv = self.moving_accuracy[key]
+            print(f"Branch: {key} Accuracy {acc} Moving {mv}")
 
     def get_accuracies(self):
         acc = {}
@@ -65,7 +66,7 @@ class BpPerceptron():
     """
     def __init__(self, n):
         self.net = ClassicalPerceptron(n)
-        self.optimizer = optim.SGD(self.net.parameters(), lr=1e-1)
+        self.optimizer = optim.SGD(self.net.parameters(), lr=1e-3)
 
     def predict(self, X):
         pred = self.net(torch.tensor(X, dtype=torch.float))
