@@ -9,17 +9,17 @@ class DecisionList:
         self.N = N
         self.length = length
 
-        if not node_idx:
-            self.node_idx = np.random.randint(0, 2, (self.length))
+        if node_idx is None:
+            self.node_idx = np.arange(0, N)
         else:
             self.node_idx = node_idx
 
-        if not node_values:
+        if node_values is None:
             self.node_values = np.random.randint(0, 2, (self.length))
         else:
             self.node_values = node_values
 
-        if not node_values:
+        if node_values is None:
             self.output_values = np.random.randint(0, 2, (self.length+1))
         else:
             self.output_values = output_values
