@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
@@ -15,14 +17,15 @@ def worst_case(N):
 
     return DecisionList(N, N, node_idx, node_values, output_values)
 
-data_length = 100000
-iterations = 10
-N_max = 9
+data_length = 40000
+iterations = 8
+N_max = 8
 N_vals = range(2, N_max)
 
 wc_data = []
 random_data = []
 
+start = time.time()
 for N in N_vals:
     temp = []
     for _ in range(iterations):
@@ -49,7 +52,8 @@ for N in N_vals:
         temp.append(wrong)
 
     random_data.append(np.median(temp))
-
+end = time.time()
+print("time", end - start)
 
 plt.figure()
 plt.plot(list(N_vals), wc_data, label="worst case")
