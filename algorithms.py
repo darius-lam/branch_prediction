@@ -98,6 +98,12 @@ def select_no_tags(input, low, high, batch_size, bp):
     return result, result_length
 
 
+def loop(n, bp, tag=None):
+    i = 0
+    while bp(i < n, tag):
+        i+=1
+
+
 def toy_example(input, conditional, bp):
     """
     input should be a 2D list

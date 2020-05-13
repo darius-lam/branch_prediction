@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class DecisionList:
     def __init__(self, N, length, node_idx=None, node_values=None,
                  output_values=None):
@@ -34,3 +35,16 @@ class DecisionList:
                 return self.output_values[idx]
 
         return self.output_values[self.length]
+
+
+class ParityFunction:
+    def __init__(self, N, vals=None):
+        self.N = N
+        if vals is None:
+            self.vals = np.arange(0, N)
+        else:
+            self.vals = vals
+
+    def __call__(self, x):
+        dot_prod = np.dot(self.vals, x)
+        return np.mod(dot_prod, 2)
