@@ -1,4 +1,4 @@
-
+import random
 
 def bubble_sort(input, bp):
     i = 1
@@ -16,6 +16,41 @@ def bubble_sort(input, bp):
                 swapped = True
             i += 1
 
+def malicious_random(eta, n, bp, adversarial=True):
+    """
+    Eta: Float indicating probability of adversarial example
+    n: Integer number of times to loop
+    """
+
+    if adversarial:
+        name="adversarial_noise"
+    else:
+        name="random_noise"
+
+    #With probability 1-eta, we return either the
+    #opposite label (adversarial) or
+    #a random label (random)
+    for i in range(n):
+        val = random.random()
+        true_label = (i%3) == 0 #Should be  0,0,0,1,0,0,0,1 ...
+
+        if val < (1-eta):
+            if not adversarial:
+                retval = (1-true_label) if random.random() < 0.5 else true_label
+            else:
+                retval = 1-true_label
+
+            bp(retval,name) 
+        else:
+            bp(true_label, name)
+         
+
+
+def full_random(eta, bp):
+    if bp(random.random() < 1-eta, "full_random"):
+        return True
+
+    return False
 
 def select(input, low, high, batch_size, bp):
     result = []

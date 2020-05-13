@@ -31,6 +31,72 @@ class BpPerceptron():
 
         return (pred > 0.5).numpy()
 
+class BpLambdaPerceptron():
+    """
+    Wrapper for perceptron. Essentially just has logic for training
+    """
+    def __init__(self, n, lamb):
+        self.net = ClassicalPerceptron(n)
+        self.optimizer = optim.SGD(self.net.parameters(), lr=1e-3)
+        self.example_history_x = []
+        self.example_history_y = []
+        self.lamb = lamb
+        self.bs = 16
+
+    def predict(self, X):
+        pred = self.net(torch.tensor(X, dtype=torch.float))
+
+        return pred
+
+    def learning_round(self):
+        self.optimizer.zero_grad()
+        
+        rand_idxs = np.random.choice(np.arange(len(self.example_history_x)), 
+            size=self.bs, replace=False)
+
+        batch_x = torch.tensor(self.example_history_x,dtype=torch.float32)[rand_idxs]
+        batch_y = torch.tensor(self.example_history_y,dtype=torch.float32)[rand_idxs]
+
+        preds = self.predict(batch_x)
+
+        preval = 2*batch_y - 1
+        lambda_term = (self.lamb * torch.sum(batch_x**2,1) * preval).view(-1,1)
+
+        #mask = lambda_term < preds
+
+        loss = torch.mean(  torch.abs(preds-batch_y.view(-1,1)))
+
+        loss.backward()
+        self.optimizer.step()
+
+    def predict_and_update(self, X, y):
+        self.optimizer.zero_grad()
+
+        if list(X) in self.example_history_x:
+            preval = (2*self.example_history_y[self.example_history_x.index( list(X) )] )- 1
+            #print(preval, np.sum(X**2))
+            lambda_term = self.lamb * np.sum(X**2) * preval
+            #print(lambda_term)
+        else:
+            lambda_term = 0
+
+        
+        pred = self.predict(X)
+        loss = torch.abs(pred - y)
+
+        if (len(self.example_history_x)+1) % (self.bs+1) == 0:
+            self.learning_round()
+
+        #Backpropagate
+        loss.backward()
+        self.optimizer.step()
+
+        if (( (pred+lambda_term) > 0.5).numpy() != y):
+            self.example_history_x.append(list(X))
+            self.example_history_y.append(y)
+
+        return ( (pred+lambda_term) > 0.5).numpy()
+
 
 class ClassicalPerceptron(nn.Module):
     def __init__(self, n):
@@ -67,7 +133,7 @@ class TruePerceptron():
 
 
 class BranchPredictor():
-    def __init__(self, n, preceptron=BpPerceptron):
+    def __init__(self, n, preceptron=BpPerceptron, *argv):
         """
         This class is responsible for storing the table of perceptrons and
         keeping track of the global history register.
@@ -78,7 +144,7 @@ class BranchPredictor():
         self.moving_accuracy = collections.defaultdict(float)
         self.taken_history = collections.defaultdict(list)
         self.prediction_history = collections.defaultdict(list)
-        self.perceptrons = collections.defaultdict(lambda : preceptron(n))
+        self.perceptrons = collections.defaultdict(lambda : preceptron(n, *argv))
 
     def __call__(self, condition, tag=None):
         """
