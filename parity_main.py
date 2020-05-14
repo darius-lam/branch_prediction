@@ -9,7 +9,7 @@ import plotter
 
 
 N = 8
-data_length = 1000
+data_length = 10000
 
 bp = BranchPredictor(N, TruePerceptron)
 parity = ParityFunction(N)
@@ -21,4 +21,4 @@ toy_example(input, parity, bp)
 
 bp.print_accuracies()
 
-plotter.generate_plot(bp, "branch", 20)
+plotter.generate_plot(bp, "branch", 250)
